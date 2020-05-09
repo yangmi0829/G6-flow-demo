@@ -21,10 +21,13 @@ export default function (G6) {
                 });
                 // 触发事件更新Flow.vue文件中的edges
                 /*begin*/
-                const id = this.edge._cfg.id
-                const source = this.edge._cfg.source._cfg.id
-                const target = this.edge._cfg.target._cfg.id
-                graph.emit('add-edge', {id,source,target})
+                if( this.edge._cfg){
+                    const id = this.edge._cfg.id
+                    const source = this.edge._cfg.source._cfg.id
+                    const target = this.edge._cfg.target._cfg.id
+                    graph.emit('add-edge', {id,source,target})
+                }
+
                 /*end*/
                 // graph.setItemState(this.edge, 'selected', true);
                 this.edge = null;

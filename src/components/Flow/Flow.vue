@@ -2,6 +2,7 @@
     <div class="flow-box">
         <flow-panel class="panel" @dragend="dragend"></flow-panel>
         <div class="canvas" id="mountNode"></div>
+        <operate-form class="operate-form"></operate-form>
     </div>
 </template>
 
@@ -11,10 +12,11 @@
     import Behavior from './behavior'
     import MODE from "@/components/Flow/mode";
     import listeners from "./listeners";
+    import OperateForm from "@/components/Flow/OperateForm";
     Behavior(G6)
     export default {
         name: "Flow",
-        components: {FlowPanel},
+        components: {OperateForm, FlowPanel},
         data(){
             return {
                 graph: null,
@@ -37,12 +39,33 @@
             }
         },
         methods: {
+            handleDelkeyCode(){
+                // 查询所有选中的元素
+                const nodes = this.graph.findAllByState('node', 'selected');
+                const edges = this.graph.findAllByState('edge', 'selected');
+                /*不存在多选*/
+                const nodeId = nodes.map(item => item._cfg.id)[0]
+                const edgeId = edges.map(item => item._cfg.id)[0]
+                if(edgeId){
+                    const index = this.edges.findIndex(item => item.id === edgeId)
+                    this.edges.splice(index,1)
+                }
+                if(nodeId){
+                    const index = this.nodes.findIndex(item => item.id === nodeId)
+                    this.nodes.splice(index,1)
+                    //删除节点，同时删除连线
+                    this.edges = this.edges.filter(item => !(item.source === nodeId || item.target === nodeId) )
+                }
+                this.drawDraph()
+            },
             addEdges(edge){
-                this.edges.push(edge)
+                if(!(this.edges.find(item => item.source === edge.source && item.target === edge.target))){
+                    this.edges.push(edge)
+                }
             },
             dragend(e, details){
-                const { x, y } = e
-                const p = this.graph.getPointByClient(x, y)
+                const { clientX, clientY } = e
+                const p = this.graph.getPointByClient(clientX, clientY)
                 if(p.x > 0 && p.y > 0){
                     this.nodes.push({
                         id: Date.now().toString(),
@@ -51,9 +74,11 @@
                         label: details.label,
                         type: details.type
                     })
-                    this.graph.changeData(this.flowData)
+                    this.drawDraph()
                 }
-
+            },
+            drawDraph(){
+                this.graph.changeData(this.flowData)
             },
             renderFlow(){
                 const graph = this.graph
@@ -70,14 +95,26 @@
                         [MODE.DEFAULT]: ['drag-node', 'click-select', 'click-add-edge']
                     },
                     nodeStateStyles: {
+                        /*节点选中*/
                         selected: {
                             stroke: '#1f25f7',
                             lineWidth: 3,
                         },
                     },
+                    edgeStateStyles: {
+                        selected: {
+                            stroke: '#1f25f7',
+                            lineWidth: 5,
+                        },
+                    },
                     defaultEdge: {
+                        /*默认边*/
                         style: {
-                            endArrow: true
+                            stroke: '#2580f7',
+                            endArrow: true,
+                            lineWidth: 2,
+                            lineAppendWidth: 5,
+                            cursor: 'pointer'
                         }
                     }
                 });
@@ -97,11 +134,15 @@
     .flow-box{
         display: flex;
         .panel{
-            min-width: 200px;
-            height: fit-content;
         }
         .canvas{
-            flex: 1;
+            flex: 0 0 auto;
+            float: left;
+            width:70%;
+            border-bottom: 1px solid #E9E9E9;
+        }
+        .operate-form{
+
         }
     }
 
