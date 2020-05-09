@@ -16,19 +16,19 @@ export default function (G6) {
             };
             const model = node.getModel();
             if (this.addingEdge && this.edge) {
-                graph.updateItem(this.edge, {
-                    target: model.id
-                });
-                // 触发事件更新Flow.vue文件中的edges
-                /*begin*/
-                if( this.edge._cfg){
-                    const id = this.edge._cfg.id
-                    const source = this.edge._cfg.source._cfg.id
-                    const target = this.edge._cfg.target._cfg.id
-                    graph.emit('add-edge', {id,source,target})
+                const edge = this.edge.getModel();
+                const exist = graph.findAll('edge', ce => {
+                    const {source, target} = ce.getModel()
+                    return target === model.id && source === edge.source
+                }).length > 0
+                if(exist){
+                    graph.removeItem(this.edge);
+                }else{
+                    graph.updateItem(this.edge, {
+                        target: model.id
+                    });
                 }
 
-                /*end*/
                 // graph.setItemState(this.edge, 'selected', true);
                 this.edge = null;
                 this.addingEdge = false;

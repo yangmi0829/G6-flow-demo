@@ -1,7 +1,11 @@
 export default function (graph) {
     graph.on('edge:click', function (e) {
         const selectedEdges = graph.findAllByState('edge', 'selected');
+        const selectedNodes = graph.findAllByState('node', 'selected');
         selectedEdges.forEach(ce => {
+            graph.setItemState(ce, 'selected', false);
+        });
+        selectedNodes.forEach(ce => {
             graph.setItemState(ce, 'selected', false);
         });
         const edgeItem = e.item;

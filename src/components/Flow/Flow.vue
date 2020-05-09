@@ -1,5 +1,6 @@
 <template>
     <div class="flow-box">
+        <button @click="printData" style="position: absolute; top: 0;left: 50%">打印数据</button>
         <flow-panel class="panel" @dragend="dragend"></flow-panel>
         <div class="canvas" id="mountNode"></div>
         <operate-form class="operate-form"></operate-form>
@@ -39,51 +40,21 @@
             }
         },
         methods: {
-            handleDelkeyCode(){
-                // 查询所有选中的元素
-                const nodes = this.graph.findAllByState('node', 'selected');
-                const edges = this.graph.findAllByState('edge', 'selected');
-                /*不存在多选*/
-                const nodeId = nodes.map(item => item._cfg.id)[0]
-                const edgeId = edges.map(item => item._cfg.id)[0]
-                if(edgeId){
-                    const index = this.edges.findIndex(item => item.id === edgeId)
-                    this.edges.splice(index,1)
-                }
-                if(nodeId){
-                    const index = this.nodes.findIndex(item => item.id === nodeId)
-                    this.nodes.splice(index,1)
-                    //删除节点，同时删除连线
-                    this.edges = this.edges.filter(item => !(item.source === nodeId || item.target === nodeId) )
-                }
-                this.drawDraph()
-            },
-            addEdges(edge){
-                if(!(this.edges.find(item => item.source === edge.source && item.target === edge.target))){
-                    this.edges.push(edge)
-                }
+            printData(){
+                console.log(this.graph.save())
             },
             dragend(e, details){
                 const { clientX, clientY } = e
                 const p = this.graph.getPointByClient(clientX, clientY)
                 if(p.x > 0 && p.y > 0){
-                    this.nodes.push({
+                    this.graph.addItem('node', {
                         id: Date.now().toString(),
                         x: p.x,
                         y: p.y,
                         label: details.label,
                         type: details.type
-                    })
-                    this.drawDraph()
+                    });
                 }
-            },
-            drawDraph(){
-                this.graph.changeData(this.flowData)
-            },
-            renderFlow(){
-                const graph = this.graph
-                graph.data(this.flowData); // 加载数据
-                graph.render(); // 渲染
             },
             initGraph(){
                 const graph = new G6.Graph({
@@ -118,13 +89,14 @@
                         }
                     }
                 });
-                listeners(graph, this)
+                graph.data(this.flowData); // 加载数据
+                graph.render(); // 渲染
+                listeners(graph)
                 this.graph = graph
             }
         },
         mounted() {
             this.initGraph()
-            this.renderFlow()
         },
 
     }
